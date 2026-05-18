@@ -958,6 +958,13 @@
         let synth = window.speechSynthesis;
         let currentUtterance = null;
         let voiceGender = 'female'; // 'female', 'male', 'hiroyuki'
+        let currentAudio = null;    // 本物のMP3再生用オーディオオブジェクト
+
+        // ひろゆき風MP3音声ファイルの対応マッピング
+        const hiroyukiMp3Files = {
+            1: "voice/0_0_ひろゆき_医療・介護.mp3",
+            2: "voice/0_0_ひろゆき_ご自宅での.mp3"
+        };
 
         // タッチ操作スワイプ判定用変数
         let touchStartX = 0;
@@ -1281,6 +1288,56 @@
                 return;
             }
 
+            // ひろゆき風モードで、かつ対応する本物のMP3ファイルが事前に用意されている場合
+            if (voiceGender === 'hiroyuki' && hiroyukiMp3Files[currentSlide]) {
+                const mp3Path = hiroyukiMp3Files[currentSlide];
+                
+                try {
+                    currentAudio = new Audio(mp3Path);
+                    
+                    currentAudio.onended = () => {
+                        stopSpeaking();
+                    };
+                    
+                    currentAudio.onerror = (e) => {
+                        console.error("Audio playback error, falling back to TTS:", e);
+                        stopSpeaking();
+                        // エラー時のフォールバックとしてTTSで再生
+                        playTtsFallback();
+                    };
+                    
+                    // 読み上げ状態を更新
+                    isSpeaking = true;
+                    updateTtsButtonToStop();
+                    
+                    currentAudio.play();
+                    return; // Web Speech APIの処理は行わずに終了
+                } catch (err) {
+                    console.error("Failed to play audio file:", err);
+                }
+            }
+
+            // MP3が無い場合、または通常ボイスの場合は合成音声(TTS)を実行
+            playTtsFallback();
+        }
+
+        // ボタン表示を「読み上げを止める」に切り替える共通関数
+        function updateTtsButtonToStop() {
+            const btn = document.querySelector('.btn-tts');
+            if (btn) {
+                btn.innerHTML = `
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"></path>
+                    </svg>
+                    読み上げを止める
+                `;
+                btn.style.color = 'var(--accent)';
+                btn.style.backgroundColor = 'var(--accent-light)';
+            }
+        }
+
+        // Web Speech APIでの合成音声再生（フォールバック）
+        function playTtsFallback() {
             const rawText = document.getElementById('descContent').textContent;
             let textToSpeak = cleanTextForSpeech(rawText);
             
@@ -1349,26 +1406,25 @@
                 synth.speak(currentUtterance);
                 isSpeaking = true;
                 
-                // ボタン表記の更新
-                const btn = document.querySelector('.btn-tts');
-                btn.innerHTML = `
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"></path>
-                    </svg>
-                    読み上げを止める
-                `;
-                btn.style.color = 'var(--accent)';
-                btn.style.backgroundColor = 'var(--accent-light)';
+                updateTtsButtonToStop();
             } else {
                 alert("お使いのブラウザは音声読み上げに対応していません。別のブラウザでお試しください。");
             }
         }
 
-        // 音声を停止する処理
+        // 音声を停止する処理（Web Speech と MP3 の双方に対応）
         function stopSpeaking() {
-            if (synth) {
+            // Web Speech APIの停止
+            if ('speechSynthesis' in window && synth) {
                 synth.cancel();
             }
+            
+            // MP3オーディオの停止
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
             isSpeaking = false;
             
             const btn = document.querySelector('.btn-tts');
@@ -1379,8 +1435,8 @@
                     </svg>
                     耳で聴く（音声）
                 `;
-                btn.style.color = 'var(--text-muted)';
-                btn.style.backgroundColor = 'transparent';
+                btn.style.color = 'var(--primary)';
+                btn.style.backgroundColor = 'var(--bg)';
             }
         }
     </script>
