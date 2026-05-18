@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYNXS 家族・介護者向けHTML資料作成ロードマップ</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-light: #ebf8ff;
+            --secondary-color: #319795;
+            --accent-color: #dd6b20;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 20px;
+        }
+
+        .tag {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* タイムラインのスタイル */
+        .timeline {
+            position: relative;
+            margin: 40px 0;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item.active::before {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            box-shadow: 0 0 0 5px var(--primary-light);
+        }
+
+        .timeline-item.completed::before {
+            border-color: var(--secondary-color);
+            background: var(--secondary-color);
+        }
+
+        .timeline-content {
+            background: var(--bg-color);
+            padding: 20px 25px;
+            border-radius: 12px;
+            border-left: 5px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item.active .timeline-content {
+            background: var(--primary-light);
+            border-left-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(43, 108, 176, 0.08);
+        }
+
+        .timeline-item.completed .timeline-content {
+            border-left-color: var(--secondary-color);
+        }
+
+        .phase-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .phase-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .timeline-item.active .phase-title {
+            color: var(--primary-color);
+        }
+
+        .phase-status {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-todo {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .status-doing {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .status-done {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .phase-desc {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-list li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .task-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        .timeline-item.active .task-list li::before {
+            color: var(--primary-color);
+        }
+
+        .timeline-item.completed .task-list li::before {
+            color: var(--secondary-color);
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .agent-badge {
+            display: inline-block;
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="tag">@[/Nagi] ディレクション</span>
+            <h1>LYNXS 家族・介護者向け資料 HTML化プロジェクト</h1>
+            <p class="subtitle">ロードマップ & マイルストーン計画</p>
+        </header>
+
+        <div class="timeline">
+            <!-- Phase 1 -->
+            <div class="timeline-item completed">
+                <div class="timeline-content">
+                    <div class="phase-meta">
+                        <span class="phase-title">Phase 1: 画像分析とプロジェクト基盤定義</span>
+                        <span class="phase-status status-done">完了</span>
+                    </div>
+                    <p class="phase-desc">
+                        LYNXSフォルダ配下の全画像（01.png〜40.png）の構成と順序、マニュアル内容を分析。フォルダ構造ルールに基づき新規保存先を定義しました。
+                    </p>
+                    <ul class="task-list">
+                        <li>画像データ（40枚）の内容調査とセクション区分定義</li>
+                        <li>フォルダ構造ルールの確認と、新カテゴリ <code>01_Nursing_Welfare/13_LYNXS_Guide/</code> の選定</li>
+                        <li>ロードマップとマイルストーンの策定・提示</li>
+                    </ul>
+                    <div style="margin-top: 10px;">
+                        <span class="agent-badge">PM: Nagi</span>
+                        <span class="agent-badge">Tech: Leo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2 -->
+            <div class="timeline-item active">
+                <div class="timeline-content">
+                    <div class="phase-meta">
+                        <span class="phase-title">Phase 2: 設計・推敲とUI/UXディレクション</span>
+                        <span class="phase-status status-doing">進行中</span>
+                    </div>
+                    <p class="phase-desc">
+                        スライド切り替えの基本レイアウト設計に加え、高齢の家族や介護者でも扱いやすい直感的なUIデザイン、および解説テキストの推敲を行います。
+                    </p>
+                    <ul class="task-list">
+                        <li><strong>nakaji</strong> によるマニュアル導入文と操作補助テキストの高品質な推敲</li>
+                        <li><strong>Miku</strong> による「分かりやすさ・押しやすさ」に配慮したUI/UXバリアフリー設計</li>
+                        <li><strong>Theo</strong> によるプレミアムで目に優しい配色（ブルー・グリーン系）の決定</li>
+                    </ul>
+                    <div style="margin-top: 10px;">
+                        <span class="agent-badge">Writer: nakaji</span>
+                        <span class="agent-badge">UX: Miku</span>
+                        <span class="agent-badge">Design: Theo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3 -->
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="phase-meta">
+                        <span class="phase-title">Phase 3: プレミアムHTMLコーディングと実装</span>
+                        <span class="phase-status status-todo">未着手</span>
+                    </div>
+                    <p class="phase-desc">
+                        40枚のスライドをシームレスかつインタラクティブに閲覧できる、最高峰のWeb型マニュアルページを構築します。
+                    </p>
+                    <ul class="task-list">
+                        <li>画像サイズアスペクト比のレスポンシブ最適化とスライドアニメーション実装</li>
+                        <li>サイドバーまたはドロワー方式による、01〜40各セクションへのジャンプ目次メニュー</li>
+                        <li>スマホでのスワイプジェスチャー対応（左右にフリックしてページ送り）</li>
+                        <li>「ライト/ダークモード」切替機能、拡大・縮小モードの追加（シニア層への配慮）</li>
+                    </ul>
+                    <div style="margin-top: 10px;">
+                        <span class="agent-badge">Dev: saku</span>
+                        <span class="agent-badge">UX: Miku</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 4 -->
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="phase-meta">
+                        <span class="phase-title">Phase 4: 品質検証と成果物レポート納品</span>
+                        <span class="phase-status status-todo">未着手</span>
+                    </div>
+                    <p class="phase-desc">
+                        実際の画面動作テストを重ね、不具合のないことを確認した上で、最終的な完了報告書（HTML形式）を添えて納品します。
+                    </p>
+                    <ul class="task-list">
+                        <li>ブラウザツールを活用した画面描画・レスポンシブ・動作検証テスト</li>
+                        <li>nakajiの執筆による、プロフェッショナルな完了報告書（HTML形式）の出力</li>
+                        <li>ユーザー様の実環境での最終確認と導入サポート</li>
+                    </ul>
+                    <div style="margin-top: 10px;">
+                        <span class="agent-badge">PM: Nagi</span>
+                        <span class="agent-badge">Writer: nakaji</span>
+                        <span class="agent-badge">Security: yuna</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 社会福祉法人萌佑会 - LYNXS家族・介護者向けマニュアル作成プロジェクト</p>
+        </div>
+    </div>
+</body>
+</html>
