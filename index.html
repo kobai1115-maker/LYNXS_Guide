@@ -573,15 +573,18 @@
         .help-box li {
             margin-bottom: 6px;
             color: var(--text-muted);
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
+            position: relative;
+            padding-left: 14px;
+            line-height: 1.6;
         }
 
         .help-box li::before {
             content: '•';
             color: var(--secondary);
             font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: 0;
         }
 
         /* スワイプ操作を促すインジケーター（スマホ用） */
