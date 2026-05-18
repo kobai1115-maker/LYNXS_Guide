@@ -573,18 +573,15 @@
         .help-box li {
             margin-bottom: 6px;
             color: var(--text-muted);
-            position: relative;
-            padding-left: 14px;
-            line-height: 1.6;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
         }
 
         .help-box li::before {
             content: '•';
             color: var(--secondary);
             font-weight: bold;
-            position: absolute;
-            left: 0;
-            top: 0;
         }
 
         /* スワイプ操作を促すインジケーター（スマホ用） */
@@ -845,8 +842,8 @@
                         便利なパソコン操作
                     </h3>
                     <ul>
-                        <li>キーボードの「<strong>➔ (右矢印)</strong>」キーで次へ進み、「<strong>⬅ (左矢印)</strong>」キーで前に戻れます。</li>
-                        <li>スマホでは画像を指で<strong>左右にシャッとフリック</strong>するだけで次の画面に進みます。</li>
+                        <li>キーボードの「<strong>➔ (右矢印)</strong>」キーで次へ進み、<br>「<strong>⬅ (左矢印)</strong>」キーで前に戻れます。</li>
+                        <li>スマホでは画像を指で<strong>左右にシャッとフリック</strong>するだけで、<br>次の画面に進みます。</li>
                     </ul>
                 </div>
             </div>
