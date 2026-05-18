@@ -918,6 +918,14 @@
             updateSlideView();
             preloadNextImages();
             
+            // 音声リストをブラウザに事前ロードさせておく（Chrome等の対策）
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+                }
+            }
+            
             // キーボードの左右キーイベントを監視
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowRight') {
@@ -1130,6 +1138,35 @@
             }
         }
 
+        // 読み上げ用のテキストを聞き取りやすい形にクレンジングする（高齢者・介護者向け）
+        function cleanTextForSpeech(text) {
+            let cleaned = text;
+            
+            // 1. 【表紙と目次】などの見出し記号と中身をスルー
+            cleaned = cleaned.replace(/【[^】]+】/g, ''); 
+            
+            // 2. アルファベット表記とカタカナ表記の混在を整理
+            cleaned = cleaned.replace(/LYNXS\s*[（(]リンクス[）)]/g, 'リンクス');
+            cleaned = cleaned.replace(/SMS\s*[（(]ショートメッセージ[）)]/g, 'ショートメッセージ');
+            cleaned = cleaned.replace(/QRコード/g, 'キューアールコード');
+            cleaned = cleaned.replace(/LINE/g, 'ライン');
+            cleaned = cleaned.replace(/Chatwork/g, 'チャットワーク');
+            cleaned = cleaned.replace(/Google/g, 'グーグル');
+            cleaned = cleaned.replace(/URL/g, 'ユーアールエル');
+            
+            // 3. その他不要な記号・括弧を除去
+            cleaned = cleaned.replace(/[「」『』()（）]/g, ' ');
+            cleaned = cleaned.replace(/[※*]/g, '');
+            
+            // 4. 丸数字の箇条書きを聞きやすく調整
+            cleaned = cleaned.replace(/①/g, 'いち、');
+            cleaned = cleaned.replace(/②/g, 'に、');
+            cleaned = cleaned.replace(/③/g, 'さん、');
+            cleaned = cleaned.replace(/④/g, 'よん、');
+            
+            return cleaned.trim();
+        }
+
         // Web Speech APIを用いた音声読み上げ（高齢者サポート）
         function speakText() {
             if (isSpeaking) {
@@ -1137,14 +1174,30 @@
                 return;
             }
 
-            const textToSpeak = document.getElementById('descContent').textContent;
+            const rawText = document.getElementById('descContent').textContent;
+            const textToSpeak = cleanTextForSpeech(rawText);
             
             if ('speechSynthesis' in window) {
                 // 発話の設定
                 currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
                 currentUtterance.lang = 'ja-JP';
-                currentUtterance.rate = 1.0; // 話す速度（1.0が標準）
-                currentUtterance.pitch = 1.05; // 声の高さ（少し聞き取りやすい高めの声）
+                currentUtterance.rate = 0.85; // シニア・介護者向けに少しゆっくり話す
+                currentUtterance.pitch = 1.0;  // 落ち着いた標準のトーン
+
+                // 利用可能な音声一覧から最適な高品質の日本語音声を探す
+                const voices = synth.getVoices();
+                // 優先順位：Googleの日本語音声（非常に滑らか） -> Microsoft日本語 -> その他日本語
+                let preferredVoice = voices.find(v => v.lang.startsWith('ja') && v.name.includes('Google'));
+                if (!preferredVoice) {
+                    preferredVoice = voices.find(v => v.lang.startsWith('ja') && v.name.includes('Microsoft'));
+                }
+                if (!preferredVoice) {
+                    preferredVoice = voices.find(v => v.lang.startsWith('ja'));
+                }
+                
+                if (preferredVoice) {
+                    currentUtterance.voice = preferredVoice;
+                }
 
                 currentUtterance.onend = () => {
                     stopSpeaking();
