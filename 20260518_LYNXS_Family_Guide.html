@@ -852,8 +852,9 @@
                     <!-- 音声合成による読み上げ（バリアフリー機能） -->
                     <div class="tts-controls">
                         <div class="voice-selector">
-                            <button id="voiceFemale" class="btn-voice-select active" onclick="setVoiceGender('female')">👩 女性の声</button>
-                            <button id="voiceMale" class="btn-voice-select" onclick="setVoiceGender('male')">👨 男性の声</button>
+                            <button id="voiceFemale" class="btn-voice-select active" onclick="setVoiceGender('female')">👩 女性</button>
+                            <button id="voiceMale" class="btn-voice-select" onclick="setVoiceGender('male')">👨 男性</button>
+                            <button id="voiceHiroyuki" class="btn-voice-select" onclick="setVoiceGender('hiroyuki')">💬 ひろゆき風</button>
                         </div>
                         <button class="btn-tts" onclick="speakText()" aria-label="説明文を音声で聴く" title="説明文を自動音声で読み上げます">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -956,7 +957,7 @@
         let isSpeaking = false;
         let synth = window.speechSynthesis;
         let currentUtterance = null;
-        let voiceGender = 'female'; // 'female' または 'male'
+        let voiceGender = 'female'; // 'female', 'male', 'hiroyuki'
 
         // タッチ操作スワイプ判定用変数
         let touchStartX = 0;
@@ -1222,13 +1223,18 @@
             
             const btnFemale = document.getElementById('voiceFemale');
             const btnMale = document.getElementById('voiceMale');
+            const btnHiroyuki = document.getElementById('voiceHiroyuki');
+            
+            btnFemale.classList.remove('active');
+            btnMale.classList.remove('active');
+            btnHiroyuki.classList.remove('active');
             
             if (gender === 'female') {
                 btnFemale.classList.add('active');
-                btnMale.classList.remove('active');
-            } else {
+            } else if (gender === 'male') {
                 btnMale.classList.add('active');
-                btnFemale.classList.remove('active');
+            } else if (gender === 'hiroyuki') {
+                btnHiroyuki.classList.add('active');
             }
             
             // 再生中の場合は、停止してから新しい声で再生し直す
@@ -1236,6 +1242,36 @@
                 stopSpeaking();
                 speakText();
             }
+        }
+
+        // テキストをひろゆき風（論破・感想モード）に自動変換する関数
+        function convertToHiroyukiStyle(text) {
+            let t = text;
+            
+            // 語尾をひろゆき氏特有の表現に変換
+            t = t.replace(/です。/g, "なんですよね。");
+            t = t.replace(/ます。/g, "るわけですよ。");
+            t = t.replace(/ください。/g, "たほうがいいと思うんすよね。");
+            t = t.replace(/ましょう。/g, "たほうが幸せになれるんじゃないすか？");
+            t = t.replace(/が必要です。/g, "が必要なんすよね、知らんけど。");
+            t = t.replace(/成功です！/g, "成功なんすよね。うそはうそであると見抜ける人じゃないと難しいんすけど。");
+            t = t.replace(/安心してください。/g, "安心だと思うんすよね、僕の感想ですけど。");
+            t = t.replace(/便利です！/g, "便利なんすよね。それ使わないのって頭悪いと思うんすよね。");
+            t = t.replace(/おすすめです。/g, "おすすめなんすよね。やらない人ってちょっと残念な感じがします。");
+            t = t.replace(/完成です！/g, "完成なんすよね。これすらできないって何か問題あるんすか？");
+            t = t.replace(/完了です！/g, "完了なんすよね。はい、終わりです。");
+            t = t.replace(/設定完了です/g, "設定完了なんすよね。まあスマホ持ってるなら当然っすよね。");
+            t = t.replace(/安心してください/g, "安心だと思うんすよね。それ心配する時間無駄じゃないすか？");
+            
+            // 文頭や接続詞の差し込み
+            t = "なんか、" + t;
+            
+            // 途中の繋ぎ表現の追加
+            if (t.includes('。')) {
+                t = t.replace(/。/, "。というか、");
+            }
+            
+            return t;
         }
 
         // Web Speech APIを用いた音声読み上げ（高齢者サポート）
@@ -1246,20 +1282,33 @@
             }
 
             const rawText = document.getElementById('descContent').textContent;
-            const textToSpeak = cleanTextForSpeech(rawText);
+            let textToSpeak = cleanTextForSpeech(rawText);
+            
+            // ひろゆき風モードの場合は、テキストをひろゆき口調に自動変換
+            if (voiceGender === 'hiroyuki') {
+                textToSpeak = convertToHiroyukiStyle(textToSpeak);
+            }
             
             if ('speechSynthesis' in window) {
                 // 発話の設定
                 currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
                 currentUtterance.lang = 'ja-JP';
-                currentUtterance.rate = 1.0;  // 事業者向けに標準スピード（1.0）に変更
-                currentUtterance.pitch = 1.0; // 落ち着いた標準のトーン
+                
+                // ひろゆき風モードの場合は、早口（rate = 1.3）で少し低いボソボソ声（pitch = 0.95）にする
+                if (voiceGender === 'hiroyuki') {
+                    currentUtterance.rate = 1.3;
+                    currentUtterance.pitch = 0.95;
+                } else {
+                    currentUtterance.rate = 1.0;
+                    currentUtterance.pitch = 1.0;
+                }
 
                 // 利用可能な音声一覧から最適な日本語音声を探す
                 const voices = synth.getVoices().filter(v => v.lang.startsWith('ja'));
                 let preferredVoice = null;
                 
-                if (voiceGender === 'male') {
+                // ひろゆき風の場合は、男性の音声を優先選択する
+                if (voiceGender === 'male' || voiceGender === 'hiroyuki') {
                     // 男性声を優先検索 (Keita, Otoya, Ichiro, male など)
                     preferredVoice = voices.find(v => 
                         v.name.includes('Keita') || 
